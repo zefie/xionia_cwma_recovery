@@ -432,7 +432,6 @@ void show_mount_usb_storage_menu()
     }
 
     __system("echo '' > /sys/devices/platform/usb_mass_storage/lun0/file");
-    __system("echo 0 > /sys/devices/platform/usb_mass_storage/lun0/enable");
 }
 
 int confirm_selection(const char* title, const char* confirm)
