@@ -94,7 +94,16 @@ int nandroid_backup_partition_extended(const char* backup_path, char* root, int 
     compute_directory_stats(mount_point);
     char tmp[PATH_MAX];
     sprintf(tmp, "%s/%s.img", backup_path, name);
-    ret = mkyaffs2image(mount_point, tmp, 0, callback);
+
+    // Again use CLI over internal for some reason.. doesn't corrupt my backups
+    if (strcmp(".android_secure",name) == 0) {
+             sprintf(tmp, "/sbin/mkyaffs2image '/sdcard/%s' '%s/%s.img'", name, backup_path, name);
+    } else {
+             sprintf(tmp, "/sbin/mkyaffs2image '/%s' '%s/%s.img'", name, backup_path, name);
+    }
+
+    ret = __system(tmp);
+//  ret = mkyaffs2image(mount_point, tmp, 0, callback);
     if (umount_when_finished) {
         ensure_root_path_unmounted(root);
     }
@@ -246,12 +255,14 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* roo
 	} else {
 	    ui_print("Restoring %s...\n", name);
 	}
-    /*
+   
+/*
     if (0 != (ret = ensure_root_path_unmounted(root))) {
         ui_print("Can't unmount %s!\n", mount_point);
         return ret;
     }
-    */
+*/
+   
     if (0 != (ret = format_root_device(root))) {
         ui_print("Error while formatting %s!\n", root);
         return ret;
@@ -269,10 +280,23 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* roo
 	        return ret;
 	}
     } else {
-        if (0 != (ret = unyaffs(tmp, mount_point, callback))) {
+	// My nandroid restore is always corrupted with the internal method.
+	// This is my workaround >.>
+	if (strcmp(".android_secure",name) == 0) {
+		sprintf(tmp, "cd '/sdcard/%s' && /sbin/unyaffs '%s/%s.img'", name, backup_path, name);
+	} else {
+		sprintf(tmp, "cd '/%s' && /sbin/unyaffs '%s/%s.img'", name, backup_path, name);
+	}
+	if (0 != (ret = __system(tmp))) {
+        	ui_print("Error while restoring %s!\n",name);
+	        return ret;
+	}
+/*
+	if (0 != (ret = unyaffs(tmp, mount_point, callback))) {
             ui_print("Error while restoring %s!\n", mount_point);
             return ret;
         }
+*/
     }
     if (umount_when_finished) {
         ensure_root_path_unmounted(root);
