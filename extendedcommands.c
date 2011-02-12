@@ -149,8 +149,10 @@ char** gather_files(const char* directory, const char* fileExtensionOrDirectory,
     int dirLen = strlen(directory);
 
     dir = opendir(directory);
-    if (dir == NULL && strcmp("/sdcard/nandroid/mem=477M/",directory) != 0) {
-        ui_print("Couldn't open directory.\n");
+    if (dir == NULL) {
+	if (strcmp("/sdcard/nandroid/mem=477M/",directory) != 0) {
+	        ui_print("Couldn't open directory.\n");
+	}
         return NULL;
     }
 
