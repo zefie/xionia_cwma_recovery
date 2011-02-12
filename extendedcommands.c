@@ -71,7 +71,7 @@ int install_zip(const char* packagefilepath)
     }
 #ifndef BOARD_HAS_NO_MISC_PARTITION
     if (firmware_update_pending()) {
-        ui_print("\nReboot via menu to complete\ninstallation.\n");
+//      ui_print("\nReboot via menu to complete\ninstallation.\n");
     }
 #endif
     ui_set_background(BACKGROUND_ICON_NONE);
