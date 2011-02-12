@@ -225,7 +225,8 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* roo
 	        ui_print("Found old %s.tar!\n", name, mount_point);
 		istarfile = true;
 	    } else {
-	            ui_print("%s.tar not found either.\n", name, mount_point);
+	            ui_print("%s.tar not found either Skipping restore of .%s.\n", name, name);
+		    return 0;
 	    }
 	} else {
 	        ui_print("%s.img not found. Skipping restore of %s\n", name, mount_point);

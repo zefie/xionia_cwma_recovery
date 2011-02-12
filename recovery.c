@@ -504,12 +504,13 @@ prompt_and_wait() {
                         return;  // reboot if logs aren't visible
                     } else {
 #ifndef BOARD_HAS_NO_MISC_PARTITION
-                        if (firmware_update_pending()) {
+/*                        if (firmware_update_pending()) {
                             ui_print("\nReboot via menu to complete\n"
                                      "installation.\n");
                         } else {
+*/
                             ui_print("\nInstall from sdcard complete.\n");
-                        }
+//                        }
 #else
                         ui_print("\nInstall from sdcard complete.\n");
 #endif
