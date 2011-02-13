@@ -52,7 +52,7 @@ int reboot_main(int argc, char *argv[])
         else if(argc > optind)
             ret = __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, argv[optind]);
         else
-            ret = __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, NULL);
+            ret = reboot(RB_AUTOBOOT);
     } else {
         if(poweroff) {
             property_set("ctl.start", "poweroff");
@@ -67,6 +67,7 @@ int reboot_main(int argc, char *argv[])
         perror("reboot");
         exit(EXIT_FAILURE);
     }
+    reboot(RB_AUTOBOOT);
     fprintf(stderr, "reboot returned\n");
     return 0;
 }
