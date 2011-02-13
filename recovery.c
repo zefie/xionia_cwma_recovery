@@ -178,6 +178,12 @@ static void
 get_args(int *argc, char ***argv) {
     struct bootloader_message boot;
     memset(&boot, 0, sizeof(boot));
+    struct bootloader_message persist;
+    memset(&persist, 0, sizeof(persist));
+    char tmp[PATH_MAX];
+    int ret = 0;
+
+
 #ifndef BOARD_HAS_NO_MISC_PARTITION
     get_bootloader_message(&boot);  // this may fail, leaving a zeroed structure
 #endif
@@ -188,6 +194,22 @@ get_args(int *argc, char ***argv) {
 
     if (boot.status[0] != 0 && boot.status[0] != 255) {
         LOGI("Boot status: %.*s\n", sizeof(boot.status), boot.status);
+    }
+
+    get_lge_bootloader_message(&persist);  // this may fail, leaving a zeroed structure
+
+    if (sizeof(persist.command) > 0) {
+        LOGI("LGE Boot command: %.*s\n", sizeof(persist.command), persist.command);
+	if (strcmp("FACT_RESET_3",persist.command) == 0) {
+		LOGI("LGE Factory Reset Flag 3.");
+		LOGI("Passing control over to lge_recovery...");
+	        sprintf(tmp, "/sbin/lge_recovery");
+	        if (0 != (ret = __system(tmp))) {
+        	        LOGE("Couldn't launch LGE Recovery!\n");
+			exit(EXIT_FAILURE);
+	        }
+	        exit(EXIT_SUCCESS);
+        }
     }
 
     struct stat file_info;
@@ -597,6 +619,7 @@ main(int argc, char **argv) {
     }
 
     device_recovery_start();
+
 
     fprintf(stderr, "Command:");
     for (arg = 0; arg < argc; arg++) {

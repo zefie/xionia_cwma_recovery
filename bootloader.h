@@ -45,7 +45,9 @@ struct bootloader_message {
  * These return zero on success.
  */
 int get_bootloader_message(struct bootloader_message *out);
+int get_lge_bootloader_message(struct bootloader_message *out);
 int set_bootloader_message(const struct bootloader_message *in);
+int set_lge_bootloader_message(const struct bootloader_message *in);
 
 /* Write an update to the cache partition for update-radio or update-hboot.
  * Note, this destroys any filesystem on the cache partition!

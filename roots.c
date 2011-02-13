@@ -47,6 +47,7 @@ static RootInfo g_roots[] = {
     { "DATADATA:", BOARD_DATADATA_DEVICE, NULL, "datadata", "/datadata", BOARD_DATADATA_FILESYSTEM, BOARD_DATADATA_FILESYSTEM_OPTIONS },
 #endif
     { "MISC:", g_default_device, NULL, "misc", NULL, g_raw, NULL },
+    { "PERSIST:", g_default_device, NULL, "persist", NULL, g_raw, NULL },
     { "PACKAGE:", NULL, NULL, NULL, NULL, g_package_file, NULL },
     { "RECOVERY:", g_default_device, NULL, "recovery", "/", g_raw, NULL },
     { "SDCARD:", BOARD_SDCARD_DEVICE_PRIMARY, BOARD_SDCARD_DEVICE_SECONDARY, NULL, "/sdcard", "vfat", NULL },

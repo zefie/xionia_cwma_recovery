@@ -21,8 +21,10 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <limits.h>
 #include <string.h>
 
+static const char *PERSIST_NAME = "PERSIST:";
 static const char *CACHE_NAME = "CACHE:";
 static const char *MISC_NAME = "MISC:";
 static const int MISC_PAGES = 3;         // number of pages to save
@@ -72,6 +74,37 @@ int get_bootloader_message(struct bootloader_message *out) {
     return 0;
 }
 
+int get_lge_bootloader_message(struct bootloader_message *out) {
+    size_t write_size;
+    char tmp[PATH_MAX];
+    const MtdPartition *part = get_root_mtd_partition(PERSIST_NAME);
+    if (part == NULL || mtd_partition_info(part, NULL, NULL, &write_size)) {
+        LOGE("Can't find %s\n", PERSIST_NAME);
+        return -1;
+    }
+
+    MtdReadContext *read = mtd_read_partition(part);
+    if (read == NULL) {
+        LOGE("Can't open %s\n(%s)\n", PERSIST_NAME, strerror(errno));
+        return -1;
+    }
+
+    const ssize_t size = write_size * MISC_PAGES;
+    char data[size];
+    ssize_t r = mtd_read_data(read, data, size);
+    if (r != size) LOGE("Can't read %s\n(%s)\n", PERSIST_NAME, strerror(errno));
+    mtd_read_close(read);
+    if (r != size) return -1;
+
+#ifdef LOG_VERBOSE
+    printf("\n--- get_lge_bootloader_message ---\n");
+    dump_data(data, size);
+    printf("\n");
+#endif
+    memcpy(out, data, sizeof(*out));
+    return 0;
+}
+
 int set_bootloader_message(const struct bootloader_message *in) {
     size_t write_size;
     const MtdPartition *part = get_root_mtd_partition(MISC_NAME);
@@ -117,6 +150,59 @@ int set_bootloader_message(const struct bootloader_message *in) {
     }
 
     LOGI("Set boot command \"%s\"\n", in->command[0] != 255 ? in->command : "");
+    return 0;
+}
+
+int set_lge_bootloader_message(const struct bootloader_message *in) {
+    size_t write_size;
+    const MtdPartition *part = get_root_mtd_partition(PERSIST_NAME);
+    if (part == NULL || mtd_partition_info(part, NULL, NULL, &write_size)) {
+        LOGE("Can't find %s\n", PERSIST_NAME);
+        return -1;
+    }
+
+    format_root_device("PERSIST:");
+
+    MtdReadContext *read = mtd_read_partition(part);
+    if (read == NULL) {
+        LOGE("Can't open %s\n(%s)\n", PERSIST_NAME, strerror(errno));
+        return -1;
+    }
+
+    if (sizeof(in->command) > 0) {
+	    ssize_t size = write_size * MISC_PAGES;
+	    char data[size];
+	    ssize_t r = mtd_read_data(read, data, size);
+	    if (r != size) LOGE("Can't read %s\n(%s)\n", PERSIST_NAME, strerror(errno));
+	    mtd_read_close(read);
+	    if (r != size) return -1;
+	    memcpy(&data[0],in->command,sizeof(in->command));
+	
+	#ifdef LOG_VERBOSE
+	    printf("\n--- set_lge_bootloader_message ---\n");
+	    dump_data(data, size);
+	    printf("\n");
+	#endif
+	
+	    MtdWriteContext *write = mtd_write_partition(part);
+	    if (write == NULL) {
+	        LOGE("Can't open %s\n(%s)\n", PERSIST_NAME, strerror(errno));
+	        return -1;
+	    }
+	    if (mtd_write_data(write, data, size) != size) {
+	        LOGE("Can't write %s\n(%s)\n", PERSIST_NAME, strerror(errno));
+	        mtd_write_close(write);
+	        return -1;
+	    }
+	    if (mtd_write_close(write)) {
+	        LOGE("Can't finish %s\n(%s)\n", PERSIST_NAME, strerror(errno));
+	        return -1;
+	    }
+	
+	    LOGI("Set LGE boot command \"%s\"\n", in->command[0] != 255 ? in->command : "");
+	} else {
+	    LOGI("Wiped LGE boot commands\n");
+	}
     return 0;
 }
 

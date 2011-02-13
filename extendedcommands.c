@@ -813,6 +813,16 @@ void wipe_battery_stats()
     ensure_root_path_unmounted("DATA:");
 }
 
+void rtn_factory_reset()
+{
+    struct bootloader_message persist;
+    memset(&persist, 0, sizeof(persist));
+    format_root_device("MISC:");
+    strlcpy(persist.command, "FACT_RESET_3", sizeof(persist.command));
+    set_lge_bootloader_message(&persist);
+    device_toggle_display(NULL,NULL);
+}
+
 void show_advanced_menu()
 {
     static char* headers[] = {  "Advanced and Debugging Menu",
@@ -820,10 +830,11 @@ void show_advanced_menu()
                                 NULL
     };
 
-    static char* list[] = { "Reboot Recovery",
-			    "Fix Recovery Loop",
+    static char* list[] = { "Reboot back into Recovery",
+			    "Fix Recovery Boot Loop",
                             "Wipe Dalvik Cache",
                             "Wipe Battery Stats",
+                            "LG-Style Factory Wipe",
                             "Report Error",
                             "Key Test",
 #ifndef BOARD_HAS_SMALL_RECOVERY
@@ -839,6 +850,8 @@ void show_advanced_menu()
     for (;;)
     {
         int chosen_item = get_menu_selection(headers, list, 0);
+	char tmp[PATH_MAX];
+	int ret = 0;
         if (chosen_item == GO_BACK)
             break;
         switch (chosen_item)
@@ -847,8 +860,10 @@ void show_advanced_menu()
                 __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, "recovery");
                 break;
 	    case 1: {
+		
 		format_root_device("MISC:");
-                __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2, LINUX_REBOOT_CMD_RESTART2, "");
+		format_root_device("PERSIST:");
+                reboot(RB_AUTOBOOT);
 		break;
 	    }
             case 2:
@@ -873,9 +888,15 @@ void show_advanced_menu()
                 break;
             }
             case 4:
+            {
+                if (confirm_selection( "Confirm LG Factory Reset?", "Yes - Wipe Phone"))
+                    rtn_factory_reset();
+                break;
+            }
+            case 5:
                 handle_failure(1);
                 break;
-            case 5:
+            case 6:
             {
                 ui_print("Outputting key codes.\n");
                 ui_print("Go back to end debugging.\n");
@@ -890,7 +911,7 @@ void show_advanced_menu()
                 while (action != GO_BACK);
                 break;
             }
-            case 6:
+            case 7:
             {
                 static char* ext_sizes[] = { "0M",
 					     "128M",
@@ -934,7 +955,7 @@ void show_advanced_menu()
                     ui_print("An error occured while partitioning your SD Card. Please see /tmp/recovery.log for more details.\n");
                 break;
             }
-            case 7:
+            case 8:
             {
                 ensure_root_path_mounted("SYSTEM:");
                 ensure_root_path_mounted("DATA:");
@@ -943,7 +964,7 @@ void show_advanced_menu()
                 ui_print("Done!\n");
                 break;
             }
-            case 8:
+            case 9:
             {
                 static char* ext_sizes[] = { "128M",
                                              "256M",
