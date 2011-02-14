@@ -78,5 +78,6 @@ int firmware_update_pending() {
 
 int maybe_install_firmware_update(const char *send_intent) {
 	// Disable all updates on LS670
+	LOGE("Refusing to update RADIO image.");
 	return 0;
 }
