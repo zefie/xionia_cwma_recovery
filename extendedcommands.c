@@ -834,7 +834,6 @@ void show_advanced_menu()
 			    "Fix Recovery Boot Loop",
                             "Wipe Dalvik Cache",
                             "Wipe Battery Stats",
-                            "LG-Style Factory Wipe",
                             "Report Error",
                             "Key Test",
 #ifndef BOARD_HAS_SMALL_RECOVERY
@@ -888,15 +887,9 @@ void show_advanced_menu()
                 break;
             }
             case 4:
-            {
-                if (confirm_selection( "Confirm LG Factory Reset?", "Yes - Wipe Phone"))
-                    rtn_factory_reset();
-                break;
-            }
-            case 5:
                 handle_failure(1);
                 break;
-            case 6:
+            case 5:
             {
                 ui_print("Outputting key codes.\n");
                 ui_print("Go back to end debugging.\n");
@@ -911,7 +904,7 @@ void show_advanced_menu()
                 while (action != GO_BACK);
                 break;
             }
-            case 7:
+            case 6:
             {
                 static char* ext_sizes[] = { "0M",
 					     "128M",
@@ -955,7 +948,7 @@ void show_advanced_menu()
                     ui_print("An error occured while partitioning your SD Card. Please see /tmp/recovery.log for more details.\n");
                 break;
             }
-            case 8:
+            case 7:
             {
                 ensure_root_path_mounted("SYSTEM:");
                 ensure_root_path_mounted("DATA:");
@@ -964,7 +957,7 @@ void show_advanced_menu()
                 ui_print("Done!\n");
                 break;
             }
-            case 9:
+            case 8:
             {
                 static char* ext_sizes[] = { "128M",
                                              "256M",
