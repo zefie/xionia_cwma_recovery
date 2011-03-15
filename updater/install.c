@@ -163,7 +163,7 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
     if (argc != 3) {
 	    if (argc == 2) {
 		// for backward compatbility assume fs_type = yaffs2
-		fs_type = yaffs2;
+		fs_type = "yaffs2";
 	    } else {
 		return ErrorAbort(state, "%s() expects 2 or 3 args, got %d", name, argc);
 	    }
