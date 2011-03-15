@@ -56,6 +56,11 @@ void toggle_script_asserts()
     ui_print("Script Asserts: %s\n", script_assert_enabled ? "Enabled" : "Disabled");
 }
 
+int has_datadata() {
+    MtdPartition *vol = get_root_mtd_partition("/datadata");
+    return vol != NULL;
+}
+
 int install_zip(const char* packagefilepath)
 {
     ui_print("\n-- Installing: %s\n", packagefilepath);
@@ -608,36 +613,6 @@ int extendedcommand_file_exists()
 {
     struct stat file_info;
     return 0 == stat(EXTENDEDCOMMAND_SCRIPT, &file_info);
-}
-
-int run_script_from_buffer(char* script_data, int script_len, char* filename)
-{
-    /* Parse the script.  Note that the script and parse tree are never freed.
-     */
-    const AmCommandList *commands = parseAmendScript(script_data, script_len);
-    if (commands == NULL) {
-        printf("Syntax error in update script\n");
-        return 1;
-    } else {
-        printf("Parsed %.*s\n", script_len, filename);
-    }
-
-    /* Execute the script.
-     */
-    int ret = execCommandList((ExecContext *)1, commands);
-    if (ret != 0) {
-        int num = ret;
-        char *line = NULL, *next = script_data;
-        while (next != NULL && ret-- > 0) {
-            line = next;
-            next = memchr(line, '\n', script_data + script_len - line);
-            if (next != NULL) *next++ = '\0';
-        }
-        printf("Failure at line %d:\n%s\n", num, next ? line : "(not found)");
-        return 1;
-    }
-
-    return 0;
 }
 
 int run_script(char* filename)

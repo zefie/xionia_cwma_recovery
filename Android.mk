@@ -17,7 +17,9 @@ LOCAL_SRC_FILES := \
 	install.c \
 	roots.c \
 	ui.c \
-	verifier.c
+	verifier.c \
+	edifyscripting.c \
+	encryptedfs_provisioning.c
 
 LOCAL_SRC_FILES += \
     reboot.c \
@@ -69,14 +71,14 @@ LOCAL_STATIC_LIBRARIES += libbusybox libclearsilverregex libmkyaffs2image libuny
 
 LOCAL_STATIC_LIBRARIES += libflashutils libmtdutils libmmcutils libbmlutils
 
-LOCAL_STATIC_LIBRARIES += libamend
+LOCAL_STATIC_LIBRARIES += libamend libedify
 LOCAL_STATIC_LIBRARIES += libminzip libunz libmincrypt
 LOCAL_STATIC_LIBRARIES += libminui libpixelflinger_static libpng libcutils
 LOCAL_STATIC_LIBRARIES += libstdc++ libc
 
 include $(BUILD_EXECUTABLE)
 
-RECOVERY_LINKS := amend busybox flash_image dump_image mkyaffs2image unyaffs erase_image nandroid reboot
+RECOVERY_LINKS := amend edify busybox flash_image dump_image mkyaffs2image unyaffs erase_image nandroid reboot
 
 # nc is provided by external/netcat
 SYMLINKS := $(addprefix $(TARGET_RECOVERY_ROOT_OUT)/sbin/,$(RECOVERY_LINKS))
