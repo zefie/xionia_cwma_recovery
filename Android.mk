@@ -8,7 +8,7 @@ commands_recovery_local_path := $(LOCAL_PATH)
 # LOCAL_CPP_EXTENSION := .c
 
 LOCAL_SRC_FILES := \
-    mounts.c \
+        mounts.c \
 	extendedcommands.c \
 	nandroid.c \
 	legacy.c \

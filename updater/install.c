@@ -158,17 +158,29 @@ done:
 //    type="MTD"  location=partition
 Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
     char* result = NULL;
-    if (argc != 2) {
-        return ErrorAbort(state, "%s() expects 2 args, got %d", name, argc);
+    char* fs_type;
+
+    if (argc != 3) {
+	    if (argc == 2) {
+		// for backward compatbility assume fs_type = yaffs2
+		fs_type = yaffs2;
+	    } else {
+		return ErrorAbort(state, "%s() expects 2 or 3 args, got %d", name, argc);
+	    }
     }
-    char* type;
+    char* partition_type;
     char* location;
-    if (ReadArgs(state, argv, 2, &type, &location) < 0) {
+    if (ReadArgs(state, argv, 3, &fs_type, &partition_type, &location) < 0) {
         return NULL;
     }
 
-    if (strlen(type) == 0) {
-        ErrorAbort(state, "type argument to %s() can't be empty", name);
+    if (strlen(fs_type) == 0) {
+        ErrorAbort(state, "fs_type argument to %s() can't be empty", name);
+        goto done;
+    }
+    if (strlen(partition_type) == 0) {
+        ErrorAbort(state, "partition_type argument to %s() can't be empty",
+                   name);
         goto done;
     }
     if (strlen(location) == 0) {
@@ -176,17 +188,71 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
         goto done;
     }
 
-    if (strcmp(type, "MTD") == 0 || strcmp(type, "MMC") == 0) {
-        if (0 != erase_partition(location, NULL)) {
+    if (strcmp(partition_type, "MTD") == 0) {
+        mtd_scan_partitions();
+        const MtdPartition* mtd = mtd_find_partition_by_name(location);
+        if (mtd == NULL) {
+            fprintf(stderr, "%s: no mtd partition named \"%s\"",
+                    name, location);
             result = strdup("");
             goto done;
         }
+        MtdWriteContext* ctx = mtd_write_partition(mtd);
+        if (ctx == NULL) {
+            fprintf(stderr, "%s: can't write \"%s\"", name, location);
+            result = strdup("");
+            goto done;
+        }
+        if (mtd_erase_blocks(ctx, -1) == -1) {
+            mtd_write_close(ctx);
+            fprintf(stderr, "%s: failed to erase \"%s\"", name, location);
+            result = strdup("");
+            goto done;
+        }
+        if (mtd_write_close(ctx) != 0) {
+            fprintf(stderr, "%s: failed to close \"%s\"", name, location);
+            result = strdup("");
+            goto done;
+        }
+        result = location;
+#ifdef USE_EXT4
+    } else if (strcmp(fs_type, "ext4") == 0) {
+        reset_ext4fs_info();
+        int status = make_ext4fs(location, NULL, NULL, 0, 0, 0);
+        if (status != 0) {
+            fprintf(stderr, "%s: make_ext4fs failed (%d) on %s",
+                    name, status, location);
+            result = strdup("");
+            goto done;
+        }
+        result = location;
+#endif
+    } else if (strcmp(fs_type, "ext2") == 0) {
+        int status = format_ext2_device(location);
+        if (status != 0) {
+            fprintf(stderr, "%s: format_ext2_device failed (%d) on %s",
+                    name, status, location);
+            result = strdup("");
+            goto done;
+        }
+        result = location;
+    } else if (strcmp(fs_type, "ext3") == 0) {
+        int status = format_ext3_device(location);
+        if (status != 0) {
+            fprintf(stderr, "%s: format_ext3_device failed (%d) on %s",
+                    name, status, location);
+            result = strdup("");
+            goto done;
+        }
+        result = location;
     } else {
-        fprintf(stderr, "%s: unsupported type \"%s\"", name, type);
+        fprintf(stderr, "%s: unsupported fs_type \"%s\" partition_type \"%s\"",
+                name, fs_type, partition_type);
     }
-    result = location;
+
 done:
-    free(type);
+    free(fs_type);
+    free(partition_type);
     if (result != location) free(location);
     return StringValue(result);
 }
