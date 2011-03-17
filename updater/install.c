@@ -159,19 +159,23 @@ done:
 Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
     char* result = NULL;
     char* fs_type;
+    char* partition_type;
+    char* location;
 
     if (argc != 3) {
 	    if (argc == 2) {
 		// for backward compatbility assume fs_type = yaffs2
 		fs_type = "yaffs2";
+		if (ReadArgs(state, argv, 2, &partition_type, &location) < 0) {
+	        	return NULL;
+		}
 	    } else {
 		return ErrorAbort(state, "%s() expects 2 or 3 args, got %d", name, argc);
 	    }
-    }
-    char* partition_type;
-    char* location;
-    if (ReadArgs(state, argv, 3, &fs_type, &partition_type, &location) < 0) {
-        return NULL;
+    } else {
+	    if (ReadArgs(state, argv, 3, &fs_type, &partition_type, &location) < 0) {
+	        return NULL;
+	    }
     }
 
     if (strlen(fs_type) == 0) {
